@@ -15,9 +15,12 @@ suppressPackageStartupMessages({
   library(waldo)
 })
 
+# find the repo root via git so the script works from any cwd inside the repo
 REPO_ROOT = suppressWarnings(system2("git", c("rev-parse", "--show-toplevel"), stdout = TRUE))
+# load build_old_env()/read_file_at_tag()/git_repo_root(), used below to pull the old code
 source(file.path(REPO_ROOT, "dev", "golden-master", "helpers.R"))
 
+# load the current in-development package - this is the "new" side of every comparison below
 devtools::load_all(REPO_ROOT, quiet = TRUE)
 
 TAG = "manus_bugfix" # last tag with verified-correct (bug-fixed) behavior
@@ -70,10 +73,12 @@ run_adjscores_comparison = function(fn_name, seed, sex_type){
   set.seed(seed); old_res = old_fn(df)
   set.seed(seed); new_res = new_fn(df)
 
+  # field-by-field diff (tolerance-based); empty list means old and new match
   diff = waldo::compare(extract_adjscores(old_res), extract_adjscores(new_res), tolerance = 1e-8)
   list(label = fn_name, seed = seed, sex_type = sex_type, ok = length(diff) == 0, diff = diff)
 }
 
+# every (function, seed, sex-encoding) combination to test
 scenarios = expand.grid(
   fn_name  = names(adjscores_spec),
   seed     = c(1, 2),
@@ -81,6 +86,7 @@ scenarios = expand.grid(
   stringsAsFactors = FALSE
 )
 
+# run the comparison for each row of the scenario grid, one result list per row
 results = Map(run_adjscores_comparison, scenarios$fn_name, scenarios$seed, scenarios$sex_type)
 
 ## ---- ES() / tolLimits.obs(): unchanged names, direct comparison -----------

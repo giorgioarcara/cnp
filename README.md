@@ -63,4 +63,8 @@ change between versions.
 
 ## License
 
-MIT © Giorgio Arcara
+- **Code**: MIT © Giorgio Arcara
+- **Bundled datasets** (`GEMS`, `MOCA`, `TeleGEMS`): CC BY-NC 4.0
+  (Attribution-NonCommercial) — these are reused from published normative
+  studies (see `?GEMS`, `?MOCA`, `?TeleGEMS` for full citations) and are
+  *not* covered by the package's MIT license. Non-commercial use only.

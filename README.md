@@ -28,7 +28,7 @@ The package is not yet on CRAN. Install the development version from GitHub:
 
 ```r
 # install.packages("devtools")
-devtools::install_github("giorgioarcara/cnp", ref = "v0.1")
+pak::pak("giorgioarcara/cnp@v0.1")
 ```
 
 ## Usage

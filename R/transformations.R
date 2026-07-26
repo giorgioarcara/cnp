@@ -2,59 +2,47 @@
 # simulation functions (age/education transformations tested by
 # adjscores_A2024_*/adjscores_C1987_*, and sampled by sample.transf()).
 
-#' Cube transformation
+#' Common predictor transformations
+#'
+#' Simple transformation functions applied to age/education predictors when
+#' selecting the best-fitting model (see [adjscores_A2024_v1()],
+#' [adjscores_C1987_v1()]) or when simulating data with a known generative
+#' relationship (see [sim.norm.data()], [sample.transf()]).
 #'
 #' @param x Numeric vector.
-#' @return `x^3`.
+#' @return A numeric vector (or, for `poly2`, a matrix): the transformed
+#'   values of `x`.
+#' @name transformations
+NULL
+
+#' @rdname transformations
 #' @export
 cube = function(x){x^3}
 
-#' Quadratic transformation
-#'
-#' @param x Numeric vector.
-#' @return `x^2`.
+#' @rdname transformations
 #' @export
 quadr = function(x){x^2}
 
-#' Log of (100 - x) transformation
-#'
-#' @param x Numeric vector.
-#' @return `log(100 - x)`.
+#' @rdname transformations
 #' @export
 logm100 = function(x){log(100-x)}
 
-#' Log10 of (100 - x) transformation
-#'
-#' @param x Numeric vector.
-#' @return `log10(100 - x)`.
+#' @rdname transformations
 #' @export
 log10m100 = function(x){log10(100-x)}
 
-#' Log10 of (mean(x) - x) transformation
-#'
-#' @param x Numeric vector.
-#' @return `log10(mean(x) - x)`.
+#' @rdname transformations
 #' @export
 log10mAve = function(x){log10(mean(x)-x)}
 
-#' Inverse transformation
-#'
-#' @param x Numeric vector.
-#' @return `1 / x`.
+#' @rdname transformations
 #' @export
 inv = function(x){1/x}
 
-#' Second-order orthogonal polynomial transformation
-#'
-#' @param x Numeric vector.
-#' @return A matrix with the linear and quadratic orthogonal polynomial terms
-#'   (see [stats::poly()]).
+#' @rdname transformations
 #' @export
 poly2 = function(x){poly(x,2)}
 
-#' Zero transformation (models no effect)
-#'
-#' @param x Numeric vector.
-#' @return A vector of zeros, same length as `x`.
+#' @rdname transformations
 #' @export
 zero = function(x){0*x} # to model no effect.

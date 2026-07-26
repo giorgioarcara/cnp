@@ -37,9 +37,7 @@ sim.norm.data = function(n,
   # in all the other cases they are simply not used.
   
   # version 2. updated on May 2023.
-  
-  source("R_functions/sample.coef.unif.R")
-  
+
   vals = c(n, length(age_values_o), length(edu_values_o), length(sex_values_o))
   
 #  if (length(c.range)!=length(eff_mult)){

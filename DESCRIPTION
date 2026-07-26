@@ -1,10 +1,10 @@
 Package: cnp
-Title: Clinical NeuroPsychology Normative Data Methods
+Title: Clinical Neuropsychology Psychometrics
 Version: 0.1.0
 Authors@R:
     person("Giorgio", "Arcara", , "giorgio.arcara@gmail.com", role = c("aut", "cre"))
-Description: Functions for psychometric normative data in clinical
-    neuropsychology, including regression-based adjustment methods
+Description: Functions for psychometrics and normative data modelling in clinical
+    neuropsychology. It includes regression-based adjustment methods
     (Arcara 2024, Capitani 1987), the Equivalent Scores classification
     method, and data-simulation helpers for testing and teaching these
     methods.

@@ -104,7 +104,7 @@ adjscores_C1987 <- function(df = NULL, dep = "Dep", dep.range = c(0,30), age = "
   dat$age_tr = best_age_funct(dat$age)
   dat$edu_tr = best_edu_funct(dat$edu)
   
-  mod_formula_text = formula_transf_text(transfs = c(best_age_transf, best_edu_transf, ""), pred.names = c(age, edu, sex), dep.name = dep, data.name = "df")
+  mod_formula_text = formula_transf_text(transfs = c(best_age_transf, best_edu_transf, ""), pred.names = c(age, edu, "sex"), dep.name = dep, data.name = "dat")
   
   mod_formula = eval(parse(file="", text=mod_formula_text))
   

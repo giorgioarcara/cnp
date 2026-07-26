@@ -1,0 +1,32 @@
+# Plotting helpers (didactic visualizations).
+
+#' Plot a normal density curve with shaded tails
+#'
+#' Plots a normal density curve and shades the tail areas beyond the given
+#' quantiles. Adapted from Baayen, "Analyzing Linguistic Data" (Language R).
+#'
+#' @param qnts Numeric vector of length 2. Lower and upper quantiles beyond
+#'   which the tail areas are shaded.
+#' @param xlim Numeric vector of length 2. Plot x-axis limits.
+#' @param ... Additional arguments passed to [stats::dnorm()] / [stats::qnorm()]
+#'   (e.g. `mean`, `sd`).
+#' @param xlab Character. X-axis label.
+#' @param main Character. Plot title.
+#'
+#' @return Invisibly `NULL`; called for its side effect of producing a plot.
+#' @export
+shadenormal = function (qnts = c(0.025, 0.975), xlim=c(-3, 3), ..., xlab="", main="")
+  # adapted from Baayen Language R
+{
+  x = seq(xlim[1], xlim[2], 0.01)
+  graphics::plot(x, stats::dnorm(x, ...), type = "l", xlim=xlim, ylab="", xlab=xlab, main=main)
+  graphics::abline(h = 0)
+  x1 = seq(xlim[1], stats::qnorm(qnts[1], ...), qnts[1]/5)
+  y1 = stats::dnorm(x1, ...)
+  graphics::polygon(c(x1, rev(x1)), c(rep(0, length(x1)), rev(y1)),
+                    col = "lightgrey")
+  x1 = seq(stats::qnorm(qnts[2], ...), xlim[2], qnts[1]/5)
+  y1 = stats::dnorm(x1, ...)
+  graphics::polygon(c(x1, rev(x1)), c(rep(0, length(x1)), rev(y1)),
+                    col = "lightgrey")
+}

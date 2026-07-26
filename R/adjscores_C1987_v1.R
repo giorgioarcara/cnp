@@ -124,9 +124,11 @@ adjscores_C1987 <- function(df = NULL, dep = "Dep", dep.range = c(0,30), age = "
   mod.terms=Anova(mod, type="III")[-dim(Anova(mod, type="III"))[1], ] 
   
   to.drop=rownames(mod.terms[mod.terms[,"Pr(>F)"]>p.crit,]) # trovo il valore con p-value più alto.
-  to.drop.text = paste(to.drop, "+")
-  
-  updated.mod=eval(parse(file="", text=paste("update(updated.mod, .~.-", to.drop.text, "NULL)", sep="")))
+
+  if (length(to.drop)>0){
+    to.drop.text = paste(to.drop, collapse = " - ") # collapse into a single string so ALL flagged terms are dropped together, not just the last one
+    updated.mod=eval(parse(file="", text=paste("update(updated.mod, .~. - ", to.drop.text, ")", sep="")))
+  }
 
   mod_final =updated.mod 
   

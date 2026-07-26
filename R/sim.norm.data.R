@@ -52,7 +52,12 @@ sim.norm.data = function(n,
   
   
   ### generate numeric values for sex
-  sex_values_o_n = ifelse(sex_values_o=="M", 0, 1) # numeric version of value
+  # accepts either "M"/"F" character values or the numeric 0/1 values produced by sample.demo.cond/sample.demo.unif
+  if (is.numeric(sex_values_o)){
+    sex_values_o_n = sex_values_o
+  } else {
+    sex_values_o_n = ifelse(sex_values_o=="M", 0, 1) # numeric version of value
+  }
   
   # create current data.frame
   curr_dat = data.frame(Age = age_values_o, Edu=edu_values_o, Sex=sex_values_o, Sex_n = sex_values_o_n)

@@ -10,6 +10,9 @@
 #   Rscript dev/golden-master/compare_adjscores.R
 # (working directory can be anywhere inside the repo)
 
+# clean workspace
+rm(list=ls()) 
+
 suppressPackageStartupMessages({
   library(car)   # needed by the old sourced adjscores_C1987_*/adjscores_A2024_v3
   library(waldo)

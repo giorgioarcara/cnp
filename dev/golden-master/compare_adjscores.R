@@ -1,17 +1,24 @@
 # Golden-master check: compare the current (in-development) package's
-# adjscores_*() and ES()/tolLimits.*() functions against the last
-# known-good tagged version (manus_bugfix), to catch behavior changes
+# adjscores_*() and ES()/tolLimits.*() functions against ANY committed
+# reference point (tag, branch, or commit SHA), to catch behavior changes
 # introduced by ongoing refactoring.
 #
 # NOT part of the installed package (see .Rbuildignore) - depends on git
 # history a built/installed package doesn't have.
 #
 # Run with:
-#   Rscript dev/golden-master/compare_adjscores.R
+#   Rscript dev/golden-master/compare_adjscores.R [ref]
+# e.g.
+#   Rscript dev/golden-master/compare_adjscores.R manus_bugfix
+#   Rscript dev/golden-master/compare_adjscores.R HEAD~5
+#   Rscript dev/golden-master/compare_adjscores.R 77d0c03
+# [ref] defaults to DEFAULT_REF below if omitted. It can also be set via the
+# GOLDEN_MASTER_REF environment variable, or by pre-defining a REF variable
+# before source()-ing this script from an R session.
 # (working directory can be anywhere inside the repo)
 
 # clean workspace
-rm(list=ls()) 
+rm(list=ls())
 
 suppressPackageStartupMessages({
   library(car)   # needed by the old sourced adjscores_C1987_*/adjscores_A2024_v3
@@ -20,17 +27,40 @@ suppressPackageStartupMessages({
 
 # find the repo root via git so the script works from any cwd inside the repo
 REPO_ROOT = suppressWarnings(system2("git", c("rev-parse", "--show-toplevel"), stdout = TRUE))
-# load build_old_env()/read_file_at_tag()/git_repo_root(), used below to pull the old code
+# load build_old_env()/path_exists_at_ref()/git_repo_root(), used below to pull the old code
 source(file.path(REPO_ROOT, "dev", "golden-master", "helpers.R"))
 
 # load the current in-development package - this is the "new" side of every comparison below
 devtools::load_all(REPO_ROOT, quiet = TRUE)
 
-TAG = "manus_bugfix" # last tag with verified-correct (bug-fixed) behavior
+DEFAULT_REF = "manus_bugfix" # fallback reference point when none is supplied
+
+# resolve which committed reference to compare against: CLI arg > env var > default.
+# Pre-defining REF before source()-ing this script (e.g. from an R session) wins over all of these.
+if (!exists("REF", inherits = FALSE)) {
+  cli_args = commandArgs(trailingOnly = TRUE)
+  REF = if (length(cli_args) >= 1) cli_args[1] else Sys.getenv("GOLDEN_MASTER_REF", unset = DEFAULT_REF)
+}
+
+# fail fast with a clear message if REF doesn't resolve to a real commit
+ref_check = suppressWarnings(system2("git", c("-C", REPO_ROOT, "rev-parse", "--verify", "--quiet", paste0(REF, "^{commit}")),
+                                      stdout = TRUE, stderr = TRUE))
+if (!is.null(attr(ref_check, "status")) && attr(ref_check, "status") != 0){
+  stop("'", REF, "' does not resolve to a commit in this repo (tag, branch, or SHA expected).")
+}
 
 ## ---- adjscores_*: old file(s)/name -> new exported function name ----------
+#
+# Before the "Reorganize R/ into topical grouped files" commit, each variant
+# lived in its own file and all 3 A2024 files (resp. both C1987 files) defined
+# an identically-named adjscores_A2024()/adjscores_C1987() function. After
+# that commit, all 5 variants live together in R/regr_methods.R already under
+# their final distinct names. REF can be on either side of that commit, so
+# detect which layout applies there instead of assuming one.
 
-adjscores_spec = list(
+adjscores_uses_new_layout = path_exists_at_ref(REF, "R/regr_methods.R", REPO_ROOT)
+
+adjscores_spec_old = list(
   adjscores_A2024_v1 = list(old_name = "adjscores_A2024", files = c(
     "R/adjscores_A2024_v1.R", "R/formula_transf_text.R", "R/model_transf_text.R")),
   adjscores_A2024_v2 = list(old_name = "adjscores_A2024", files = c(
@@ -42,6 +72,15 @@ adjscores_spec = list(
   adjscores_C1987_v2 = list(old_name = "adjscores_C1987", files = c(
     "R/adjscores_C1987_v2.R", "R/formula_transf_text.R", "R/model_transf_text.R"))
 )
+
+# resolve the actual (name, files) spec to use for a given function at REF
+get_adjscores_spec = function(fn_name){
+  if (adjscores_uses_new_layout) {
+    list(old_name = fn_name, files = "R/regr_methods.R")
+  } else {
+    adjscores_spec_old[[fn_name]]
+  }
+}
 
 extract_adjscores = function(res){
   list(
@@ -66,10 +105,10 @@ make_test_data = function(seed, sex_type = c("character", "numeric"), n = 150){
 }
 
 run_adjscores_comparison = function(fn_name, seed, sex_type){
-  spec = adjscores_spec[[fn_name]]
+  spec = get_adjscores_spec(fn_name)
   df = make_test_data(seed, sex_type)
 
-  old_env = build_old_env(TAG, spec$files, REPO_ROOT)
+  old_env = build_old_env(REF, spec$files, REPO_ROOT)
   old_fn  = get(spec$old_name, envir = old_env)
   new_fn  = match.fun(fn_name)
 
@@ -83,7 +122,7 @@ run_adjscores_comparison = function(fn_name, seed, sex_type){
 
 # every (function, seed, sex-encoding) combination to test
 scenarios = expand.grid(
-  fn_name  = names(adjscores_spec),
+  fn_name  = names(adjscores_spec_old),
   seed     = c(1, 2),
   sex_type = c("character", "numeric"),
   stringsAsFactors = FALSE
@@ -93,8 +132,15 @@ scenarios = expand.grid(
 results = Map(run_adjscores_comparison, scenarios$fn_name, scenarios$seed, scenarios$sex_type)
 
 ## ---- ES() / tolLimits.obs(): unchanged names, direct comparison -----------
+# ES() was never renamed, but its file moved from R/ES.R + R/tolLimits.obs.R
+# to R/equivalent_scores.R in the same reorg commit - detect which applies.
 
-old_es_env = build_old_env(TAG, c("R/ES.R", "R/tolLimits.obs.R"), REPO_ROOT)
+es_files = if (path_exists_at_ref(REF, "R/equivalent_scores.R", REPO_ROOT)) {
+  "R/equivalent_scores.R"
+} else {
+  c("R/ES.R", "R/tolLimits.obs.R")
+}
+old_es_env = build_old_env(REF, es_files, REPO_ROOT)
 
 run_es_comparison = function(n){
   old_fn = get("ES", envir = old_es_env)
@@ -108,7 +154,7 @@ results = c(results, lapply(c(100, 200, 500), run_es_comparison)) # n < ~70 leav
 
 ## ---- report ----------------------------------------------------------------
 
-cat("\n==== Golden-master comparison vs tag:", TAG, "====\n\n")
+cat("\n==== Golden-master comparison vs ref:", REF, "====\n\n")
 for (r in results) {
   status = if (r$ok) "PASS" else "FAIL"
   extra = if (is.na(r$seed)) "" else sprintf(" seed=%d sex=%s", r$seed, r$sex_type)
@@ -118,4 +164,4 @@ for (r in results) {
 
 n_fail = sum(!vapply(results, `[[`, logical(1), "ok"))
 cat("\n", length(results) - n_fail, "/", length(results), " scenarios passed.\n", sep = "")
-if (n_fail > 0) stop(n_fail, " scenario(s) diverged from tag ", TAG, " - see diffs above.")
+if (n_fail > 0) stop(n_fail, " scenario(s) diverged from ref ", REF, " - see diffs above.")

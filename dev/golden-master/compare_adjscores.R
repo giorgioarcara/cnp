@@ -33,6 +33,7 @@ source(file.path(REPO_ROOT, "dev", "golden-master", "helpers.R"))
 # load the current in-development package - this is the "new" side of every comparison below
 devtools::load_all(REPO_ROOT, quiet = TRUE)
 
+# se here the ref if you want to source from R.
 DEFAULT_REF = "manus_bugfix" # fallback reference point when none is supplied
 
 # resolve which committed reference to compare against: CLI arg > env var > default.

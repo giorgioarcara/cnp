@@ -28,7 +28,7 @@ The package is not yet on CRAN. Install the development version from GitHub:
 
 ```r
 # install.packages("devtools")
-pak::pak("giorgioarcara/cnp@v0.1")
+pak::pak("giorgioarcara/cnp")
 ```
 
 ## Usage
@@ -52,7 +52,7 @@ for full argument details and examples.
 
 ## Status
 
-This package is under active development on the `v0.1` branch. The API may
+This package is under active development on the `v0.2` branch. The API may
 change between versions.
 
 ## References

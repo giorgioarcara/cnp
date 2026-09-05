@@ -1,0 +1,21 @@
+Package: cnp
+Title: Clinical Neuropsychology Psychometrics
+Version: 0.1.0
+Authors@R:
+    person("Giorgio", "Arcara", , "giorgio.arcara@gmail.com", role = c("aut", "cre"))
+Description: Functions for psychometrics and normative data modelling in clinical
+    neuropsychology. It includes regression-based adjustment methods
+    (Arcara 2024, Capitani 1987), the Equivalent Scores classification
+    method, and data-simulation helpers for testing and teaching these
+    methods.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports:
+    car,
+    graphics,
+    stats
+Depends: 
+    R (>= 3.5)
+LazyData: true

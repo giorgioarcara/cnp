@@ -18,19 +18,57 @@ Two priorities, in order:
 2. **Best-practice** R package design (idiomatic S3, `testthat`, roxygen, no
    `eval(parse(text=))`).
 
-## 2. The recurring shape: *estimate from norms* → *apply to new data*
+## 2. The recurring shape: *estimate* → *apply* → *interpret*
 
 Every method in this package (regression adjustment, Equivalent Scores, and now
-RCI) has the same two-phase structure:
+RCI) has the same structure:
 
-| phase | RCI example | regression-adjustment example |
-|-------|-------------|-------------------------------|
-| **estimate** from normative data | SEdiff, reliability, practice effect `k` | transformations, `lm` coefficients, `dep.range` |
-| **apply** to a new case | standardized change `Z` for a patient | adjusted score for a new patient |
+| verb | R form | RCI example | regression-adjustment example |
+|------|--------|-------------|-------------------------------|
+| **estimate** from normative data | constructor `rci()` / `adjscores()` | SEdiff, reliability, practice effect `k` | transformations, `lm` coefficients, `dep.range` |
+| **apply** to a new case (continuous) | `predict()` | standardized change score `Z` (or `t`) | adjusted score for a new patient |
+| **interpret** as a verdict (categorical) | `classify()` | reliable decline / no change / reliable improvement | Equivalent Score class 0–4 |
 
-This is exactly the `fit()` / `predict()` split. R's idiomatic expression of it
-is an **S3 "model object" + a `predict()` method**, the same as `lm()`,
-`glm()`, `prcomp()`. Adopt that here and keep it consistent across the package.
+The first two are exactly the `fit()` / `predict()` split. R's idiomatic
+expression of it is an **S3 "model object" + a `predict()` method**, the same as
+`lm()`, `glm()`, `prcomp()`. Adopt that here and keep it consistent across the
+package.
+
+### Why `classify()` is a third, separate verb
+
+`predict()` returns the **continuous statistic** — a `Z` for the Pearson/ICC
+methods, a `t` (df = n−2) for the regression method. That number is what you need
+for plotting, meta-analysis, or applying a non-standard cut-off, so `predict()`
+must always hand it back unmodified.
+
+`classify()` takes that number and turns it into a **categorical clinical
+verdict** by comparing it to a critical value (±1.96 for α = .05 two-sided;
+±*t*(n−2) for the regression method). This is the same relationship as
+`predict(glm, type = "response")` (a probability) versus thresholding it to a
+0/1 label — or as the existing `ES()` turning a continuous adjusted score into an
+ES class.
+
+Keeping it separate rather than adding a `type =` argument to `predict()` is a
+transparency/flexibility choice (priority 1): classification bundles in extra
+decisions that deserve their own explicit arguments —
+
+- `alpha` — significance level;
+- one-sided vs two-sided threshold;
+- `higher_is_better` — does an *increase* mean the patient improved, or (for
+  error counts, reaction times, …) got *worse*? This flips which tail is
+  "decline".
+
+`classify()` is intended to be **one generic across the whole package**, declared
+once (`classify <- function(object, ...) UseMethod("classify")`) with a method
+per model class: `classify.cnp_rci()` → decline/stable/improvement;
+`classify.cnp_adjscores()` → ES class 0–4 (wrapping the current `ES()` logic).
+Shared plumbing lives on the parent class `cnp_normmodel`.
+
+It is **optional**: a user who only wants the change score never calls it. The
+exact return shape is an open question (§9) — current draft: an ordered factor
+`c("reliable decline", "no change", "reliable improvement")` carrying the numeric
+score as an attribute. Name alternatives considered: `interpret()`, `decision()`
+— `classify()` chosen.
 
 ## 3. Two layers
 

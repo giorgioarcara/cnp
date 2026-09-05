@@ -256,9 +256,18 @@ print.cnp_rci <- function(x, ...) {
 ## 3. Package generic + back-compat shim (draft).
 ## =====================================================================
 
-#' Classify a new case with a fitted `cnp` normative model
+#' Interpret a new case with a fitted `cnp` normative model
 #'
-#' Generic. See [classify.cnp_rci()].
+#' The third verb in the package workflow, after *estimate* (the constructor,
+#' e.g. [rci()]) and *apply* ([predict()]). `predict()` returns the continuous
+#' statistic; `classify()` turns it into a categorical verdict by comparing it
+#' to a critical value. Kept separate from `predict()` so the raw statistic is
+#' always available and so classification-specific choices (`alpha`, one- vs
+#' two-sided, direction of "better") stay explicit.
+#'
+#' Method per model class: [classify.cnp_rci()] returns reliable decline / no
+#' change / reliable improvement; a future `classify.cnp_adjscores()` would
+#' return the Equivalent Score class.
 #'
 #' @param object A fitted `cnp` model.
 #' @param ... Passed to methods.
